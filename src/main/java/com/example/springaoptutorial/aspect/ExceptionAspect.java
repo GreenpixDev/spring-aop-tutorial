@@ -2,10 +2,8 @@ package com.example.springaoptutorial.aspect;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -14,21 +12,19 @@ import java.util.stream.Collectors;
 @Slf4j
 @Aspect
 @Component
-public class LoggingAspect {
+public class ExceptionAspect {
 
-    @Pointcut("@annotation(com.example.springaoptutorial.annotation.Logging)")
-    void callAtBookService() {}
+    @Pointcut("@within(org.springframework.stereotype.Service)")
+    void callAtService() {}
 
-    @Before("callAtBookService()")
-    void beforeCallAtBookService(JoinPoint joinPoint) {
-        String args = Arrays.stream(joinPoint.getArgs())
-                .map(Object::toString)
-                .collect(Collectors.joining(","));
-        log.info("Before method {}, args=[{}]", joinPoint, args);
-    }
-
-    @AfterReturning(value = "callAtBookService()", returning = "returnValue")
-    void afterCallAtBookService(JoinPoint joinPoint, Object returnValue) {
-        log.info("After method {}, return={}", joinPoint, returnValue);
+    @Around("callAtService()")
+    Object aroundCallAtService(ProceedingJoinPoint joinPoint) throws Throwable {
+        try {
+            return joinPoint.proceed();
+        }
+        catch (Throwable throwable) {
+            log.info("An occurred error", throwable);
+            throw throwable;
+        }
     }
 }
